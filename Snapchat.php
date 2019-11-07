@@ -1,8 +1,6 @@
 <?php
    require_once "./Helper.php";
-
-   
-    
+ 
     /* 
      *  Crear campaña 
      */
@@ -68,7 +66,7 @@
         
         $id = $rowdata['id'];
 
-        $typeData = array('integer');
+        $typeData = array('string');
 
         $data = array($id);
 
