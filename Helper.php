@@ -20,14 +20,16 @@
 		$status = array(
 			200 => '200 OK',
 			400 => '400 Bad Request',
+			404 => '404 Not Found',
 			409 => 'CLIENT ERROR',
 			500 => '500 Internal Server Error'
 			);
 		// ok, validation error, or failure
 		header('Status: '.$status[$code]);
+		
 		// return the encoded json
 		return json_encode(array(
-			'status' => $code < 300, // success or not?
+			'status' => $code, // success or not?
 			'message' => $message
 		));
 	}
