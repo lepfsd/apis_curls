@@ -129,7 +129,18 @@
 
         $typeData = array('string', 'string', 'string', 'string', 'string', 'string');
 
-        $validate = validate_type($campaign, $typeData);
+        $temp = array();
+        $typeTemp = array();
+
+        foreach ($campaignParams as $key => $value) {
+            if (!is_null($value) && isset($value)) {
+                $temp[] = $value;
+                $tipo = $typeData[$key];
+                $typeTemp[] = $tipo;
+            }
+        }
+
+        $validate = validate_type($temp, $typeTemp);
 
         if($validate != "OK") {
             return array('error' => $validate);
@@ -138,50 +149,59 @@
         $campaign = campaign_get_snapchat($appid, $access_token, $user_id, $campaignParams['id']);
 
         if($campaign['request_status'] == "success" && !empty($campaign['campaigns'])) {
-            foreach($campaign as $item) {
-                if($item['id'] === $campaignParams['id']){
-                    $campaignParams['start_time'] = get_format_time(new DateTime($rowdata['start_time']));
-                    $campaignParams['end_time'] = get_format_time(new DateTime($rowdata['end_time']));
-                    $postFields['campaigns'] = $campaignParams;
-                    $ch = curl_init();
-            
-                    curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignParams['id'] . '/campaigns');
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
-            
-                    $headers = array();
-                    $headers[] = 'Authorization: Bearer ' . $access_token;
-                    $headers[] = 'Content-Type: application/json';
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            
-                    $result = curl_exec($ch);
-                    if (curl_errno($ch)) {
-                        //echo 'Error:' . curl_error($ch);
-                        return array('error' => curl_error($ch));                        
-                        
-                    }
-            
-                    if($result['error'])  {
-                        switch($result['error']) {
-                            case 'invalidtoken':
-                                $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                                $headers[] = 'Authorization: Bearer ' . $access_token;
-                                $result = curl_exec($ch);
-                            default:
-                                return procesaerrores_snapchat($result['error']);
+            $item = $campaign['campaigns'][0];
+            if($item['id'] === $campaignParams['id']){
+                foreach ($campaignParams as $key => $value) {
+                    if (!is_null($value) && isset($value)) {
+                        if (array_key_exists('start_time', $campaignParams)) {
+                            $item[$key] = get_format_time(new DateTime($value[$key]));
                         }
+                        if (array_key_exists('end_time', $campaignParams)) {
+                            $item[$key] = get_format_time(new DateTime($value[$key]));
+                        }
+                        $item[$key] = $value[$key];  
                     }
-            
-                    curl_close($ch);
-
-                    return array('id' => $result['campaigns']['campaign']['id']);
-
-                } else {
-                    return array('error' => "campaign not found");
                 }
+                $postFields['campaigns'] = $item;
+                $ch = curl_init();
+        
+                curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignParams['id'] . '/campaigns');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
+        
+                $headers = array();
+                $headers[] = 'Authorization: Bearer ' . $access_token;
+                $headers[] = 'Content-Type: application/json';
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    //echo 'Error:' . curl_error($ch);
+                    return array('error' => curl_error($ch));                        
+                    
+                }
+        
+                if($result['error'])  {
+                    switch($result['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($result['error']);
+                    }
+                }
+        
+                curl_close($ch);
+
+                return array('id' => $result['campaigns']['campaign']['id']);
+
+            } else {
+                return array('error' => "campaign not found");
             }
+            
         } else {
             return array('error' => "campaign not found");
         }
@@ -247,67 +267,8 @@
      function campaign_estado_snapchat($appid, $access_token, $user_id, $rowdata)
      {
 
-        $campaignParams = array(
-            'status' => $rowdata['status'],
-            'id' => $rowdata['id_en_platform'],
-        );
+        $response = campaign_edit_snapchat($appid, $access_token, $user_id, $rowdata);
 
-        $typeData = array('string', 'string', 'string');
-
-        $validate = validate_type($campaignParams, $typeData);
-
-        if($validate != "OK") {
-            return array('error' => $validate);
-        }
-
-        $campaign = campaign_get_snapchat($appid, $access_token, $user_id, $campaignParams['id']);
-
-        if($campaign['request_status'] == "success" && !empty($campaign['campaigns'])) {
-            foreach($campaign as $item) {
-                if($item['id'] === $campaignParams['id']){
-                    $postFields['campaigns'] = $item;
-                    $ch = curl_init();
-            
-                    curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignParams['id'] . '/campaigns');
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
-            
-                    $headers = array();
-                    $headers[] = 'Authorization: Bearer ' . $access_token;
-                    $headers[] = 'Content-Type: application/json';
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            
-                    $result = curl_exec($ch);
-                    if (curl_errno($ch)) {
-                        
-                        return array('error' => curl_error($ch)); 
-                    }
-            
-                    if($result['error'])  {
-                        switch($result['error']) {
-                            case 'invalidtoken':
-                                $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                                $headers[] = 'Authorization: Bearer ' . $access_token;
-                                $result = curl_exec($ch);
-                            default:
-                                return procesaerrores_snapchat($result['error']);
-                        }
-                    }
-            
-                    curl_close($ch);
-
-                    echo json_response($message = $result['campaigns']['campaign']['id'], $code = 200);
-                } else {
-                    echo json_response($message = "campaign not found", $code = 400);
-                    die;
-                }
-            }
-        } else {
-            echo json_response($message = "campaign not found", $code = 400);
-            die;
-        }
      }
 
      function creative_crear_snapchat($appid, $access_token, $user_id, $campaignid, $rowdata)

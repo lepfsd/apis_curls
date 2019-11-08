@@ -9,5 +9,13 @@
         'id' => 1
     );
 
-    campaign_borrar_snapchat("", "", "", "", "", $rowdata);
+    //campaign_borrar_snapchat("", "", "", "", "", $rowdata);
+
+    
+    $a1=array("a"=>"red","b"=>"green","c"=>"blue","d"=>"yellow");
+    $a2=array("a"=>"red","b"=>"green","c"=>"blue");
+    
+    $result = array_intersect($a1, $a2);
+    print_r($result);
+
 ?>
