@@ -8,7 +8,7 @@
     {
         $campaign = array(
             'name' => $rowdata['name'],
-            'ad_account_id' => $rowdata['ad_account_id'],
+            'ad_account_id' => $add_account_id,
             'status' => $rowdata['status'],
             'start_time' => $rowdata['start_time'],
         );
@@ -41,21 +41,23 @@
         $result = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            //echo 'Error:' . curl_error($ch);
-            echo json_response($message = curl_error($ch), $code = 409);
-            die;
-            
+            return array('error' => curl_error($ch));
         }
 
-        if($result['error'] === "invalid_token") {
-            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-            $headers[] = 'Authorization: Bearer ' . $access_token;
-            $result = curl_exec($ch);
-        } 
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
 
         curl_close($ch);
 
-        echo json_response($message = $result['campaigns']['campaign']['id'], $code = 200);
+        return array('id' => $result['campaigns']['campaign']['id']);
     }
 
     /* 
@@ -64,7 +66,7 @@
     function campaign_borrar_snapchat($appid, $access_token, $user_id, $rowdata)
     {   
         
-        $id = $rowdata['id'];
+        $id = $rowdata['id_en_platform'];
 
         $typeData = array('string');
 
@@ -73,8 +75,7 @@
         $validate = validate_type($data, $typeData);
         
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
         }
         
         $ch = curl_init();
@@ -89,20 +90,25 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
+
         if (curl_errno($ch)) {
-            echo json_response($message = curl_error($ch), $code = 409);
-            die;
+            return array('error' => curl_error($ch));
         }
 
-        if($result['error'] === "invalid_token") {
-            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-            $headers[] = 'Authorization: Bearer ' . $access_token;
-            $result = curl_exec($ch);
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
         }
 
         curl_close($ch);
 
-        echo json_response($message = $result['request_status'], $code = 200);
+        return array('status' => $result['request_status']);
 
     }
 
@@ -118,7 +124,7 @@
             'status' => $rowdata['status'],
             'start_time' => $rowdata['start_time'],
             'end_time' => $rowdata['start_time'],
-            'id' => $rowdata['id'],
+            'id' => $rowdata['id_en_platform'],
         );
 
         $typeData = array('string', 'string', 'string', 'string', 'string', 'string');
@@ -126,8 +132,7 @@
         $validate = validate_type($campaign, $typeData);
 
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
         }
 
         $campaign = campaign_get_snapchat($appid, $access_token, $user_id, $campaignParams['id']);
@@ -154,28 +159,31 @@
                     $result = curl_exec($ch);
                     if (curl_errno($ch)) {
                         //echo 'Error:' . curl_error($ch);
-                        echo json_response($message = curl_error($ch), $code = 409);
-                        die;
+                        return array('error' => curl_error($ch));                        
                         
                     }
             
-                    if($result['error'] === "invalid_token") {
-                        $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                        $headers[] = 'Authorization: Bearer ' . $access_token;
-                        $result = curl_exec($ch);
-                    } 
+                    if($result['error'])  {
+                        switch($result['error']) {
+                            case 'invalidtoken':
+                                $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                                $headers[] = 'Authorization: Bearer ' . $access_token;
+                                $result = curl_exec($ch);
+                            default:
+                                return procesaerrores_snapchat($result['error']);
+                        }
+                    }
             
                     curl_close($ch);
 
-                    echo json_response($message = $result['campaigns']['campaign']['id'], $code = 200);
+                    return array('id' => $result['campaigns']['campaign']['id']);
+
                 } else {
-                    echo json_response($message = "campaign not found", $code = 400);
-                    die;
+                    return array('error' => "campaign not found");
                 }
             }
         } else {
-            echo json_response($message = "campaign not found", $code = 400);
-            die;
+            return array('error' => "campaign not found");
         }
         
         
@@ -186,7 +194,7 @@
      */
      function campaign_get_snapchat($appid, $access_token, $user_id, $rowdata) 
      {
-        $id = $rowdata['id']; 
+        $id = $rowdata['id_en_platform']; 
 
         $typeData = array('integer');
 
@@ -195,8 +203,7 @@
         $validate = validate_type($data, $typeData);
         
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
         }
 
         $ch = curl_init();
@@ -212,17 +219,20 @@
 
         $result = curl_exec($ch);
         if (curl_errno($ch)) {
-            //echo 'Error:' . curl_error($ch);
-            echo json_response($message = curl_error($ch), $code = 409);
-            die;
-            
+
+            return array('error' => curl_error($ch));     
         }
 
-        if($result['error'] === "invalid_token") {
-            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-            $headers[] = 'Authorization: Bearer ' . $access_token;
-            $result = curl_exec($ch);
-        } 
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
 
         curl_close($ch);
 
@@ -238,9 +248,8 @@
      {
 
         $campaignParams = array(
-            'id_en_platform' => $rowdata['id_en_platform'],
             'status' => $rowdata['status'],
-            'id' => $rowdata['id'],
+            'id' => $rowdata['id_en_platform'],
         );
 
         $typeData = array('string', 'string', 'string');
@@ -248,8 +257,7 @@
         $validate = validate_type($campaignParams, $typeData);
 
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
         }
 
         $campaign = campaign_get_snapchat($appid, $access_token, $user_id, $campaignParams['id']);
@@ -273,17 +281,20 @@
             
                     $result = curl_exec($ch);
                     if (curl_errno($ch)) {
-                        //echo 'Error:' . curl_error($ch);
-                        echo json_response($message = curl_error($ch), $code = 409);
-                        die;
                         
+                        return array('error' => curl_error($ch)); 
                     }
             
-                    if($result['error'] === "invalid_token") {
-                        $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                        $headers[] = 'Authorization: Bearer ' . $access_token;
-                        $result = curl_exec($ch);
-                    } 
+                    if($result['error'])  {
+                        switch($result['error']) {
+                            case 'invalidtoken':
+                                $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                                $headers[] = 'Authorization: Bearer ' . $access_token;
+                                $result = curl_exec($ch);
+                            default:
+                                return procesaerrores_snapchat($result['error']);
+                        }
+                    }
             
                     curl_close($ch);
 
@@ -315,8 +326,8 @@
         $validate = validate_type($media, $typeData);
 
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
+
         }
        
         $postFields['media'] = $media;
@@ -340,17 +351,21 @@
         curl_close($ch);
 
         if (curl_errno($ch)) {
-            //echo 'Error:' . curl_error($ch);
-            echo json_response($message = curl_error($ch), $code = 409);
-            die;
+            
+            return array('error' => curl_error($ch)); 
             
         }
 
-        if($result['error'] === "invalid_token") {
-            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-            $headers[] = 'Authorization: Bearer ' . $access_token;
-            $result = curl_exec($ch);
-        } 
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
 
         curl_close($ch);
 
@@ -359,31 +374,28 @@
         }
 
         if($media_id === null) {
-            echo json_response($message = "Error to create media", $code = 409);
-            die;
+            return array('error' => "Error to create media");
+            
         } else {
             if($rowdata['type'] == "IMAGE") {
 
                 $response = upload_image_snapchat($access_token, $media_id);
 
                 if(isset($response['error'])) {
-                    echo json_response($message = $response['error'], $code = 409);
-                    die;
+                    return array('error' => $response['error']);
                 }
                 
             } else if($rowdata['type'] == "VIDEO" && $rowdata['size'] <= 32097152) { // unidades de bit
                 $response = upload_video_snapchat($access_token, $media_id);
 
                 if(isset($response['error'])) {
-                    echo json_response($message = $response['error'], $code = 409);
-                    die;
+                    return array('error' => $response['error']);
                 }
             }  else if($rowdata['type'] == "VIDEO" && $rowdata['size'] > 32097152) { // unidades de bit
                 $response = upload_large_snapchat($access_token, $media_id);
 
                 if(isset($response['error'])) {
-                    echo json_response($message = $response['error'], $code = 409);
-                    die;
+                    return array('error' => $response['error']);
                 }
             }
         }
@@ -425,17 +437,20 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (curl_errno($ch)) {
-            //echo 'Error:' . curl_error($ch);
-            echo json_response($message = curl_error($ch), $code = 409);
-            die;
+            return array('error' => curl_error($ch));
             
         }
 
-        if($result['error'] === "invalid_token") {
-            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-            $headers[] = 'Authorization: Bearer ' . $access_token;
-            $result = curl_exec($ch);
-        } 
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
 
         curl_close($ch);
 
@@ -480,9 +495,7 @@
 
                 $result = curl_exec($ch);
                 if (curl_errno($ch)) {
-                    //echo 'Error:' . curl_error($ch);
-                    echo json_response($message = curl_error($ch), $code = 409);
-                    die;
+                    return array('error' => curl_error($ch));
                     
                 }
                 curl_close($ch);
@@ -498,8 +511,8 @@
                 );
             }
          } else {
-            echo json_response($message = "No media found", $code = 404);
-            die;
+             return array('error' => "No media found");
+            
          }
      }
 
@@ -536,10 +549,7 @@
 
                 $result = curl_exec($ch);
                 if (curl_errno($ch)) {
-                    //echo 'Error:' . curl_error($ch);
-                    echo json_response($message = curl_error($ch), $code = 409);
-                    die;
-                    
+                    return array('error' => curl_error($ch));
                 }
                 curl_close($ch);
 
@@ -554,8 +564,7 @@
                 );
             }
          }else {
-            echo json_response($message = "No media found", $code = 404);
-            die;
+            return array('error' => "No media found");
          }
      }
 
