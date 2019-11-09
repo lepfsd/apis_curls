@@ -271,7 +271,7 @@
 
      }
 
-     function creative_crear_snapchat($appid, $access_token, $user_id, $campaignid, $rowdata)
+     function creative_crear_snapchat($appid, $access_token, $user_id, $campaignid, $add_account_id, $rowdata)
      {
 
         $media_id = null;
@@ -306,16 +306,8 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        }
+        
         curl_close($ch);
-
-        if (curl_errno($ch)) {
-            
-            return array('error' => curl_error($ch)); 
-            
-        }
 
         if($result['error'])  {
             switch($result['error']) {
@@ -337,7 +329,7 @@
         if($media_id === null) {
             return array('error' => "Error to create media");
             
-        } else {
+        } /*else {
             if($rowdata['type'] == "IMAGE") {
 
                 $response = upload_image_snapchat($access_token, $media_id);
@@ -359,7 +351,7 @@
                     return array('error' => $response['error']);
                 }
             }
-        }
+        } */
 
         // creative 
         $typeData = null;
@@ -379,8 +371,8 @@
         $validate = validate_type($creative, $typeData);
 
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
+            
         }
        
         $postFields['creatives'] = $creatives;
@@ -414,8 +406,152 @@
         }
 
         curl_close($ch);
+        $creativeType = array();
+        
+        switch($rowdata['type']) {
+            case 'LONGFORM_VIDEO':
+                $videoMediaId = array(
+                    'video_media_id' => $media_id
+                );
+                $videoMediaId = json_encode($videoMediaId);
 
-        echo json_response($message = $result['creatives']['creative']['id'], $code = 200);
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'top_snap_media_id' => $rowdata['top_snap_media_id'],
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'shareable' => $rowdata['shareable'],
+                    'call_to_action' => $rowdata['call_to_action'],
+                    'longform_video_properties' => $videoMediaId,
+                );
+            case 'APP_INSTALL':
+                $properties = array(
+                    'app_name' => $rowdata['app_name'],
+                    'android_app_url' => $rowdata['android_app_url'],
+                    'icon_media_id' => $rowdata['icon_media_id'],
+                );
+                $properties = json_encode($properties);
+
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'top_snap_media_id' => $rowdata['top_snap_media_id'],
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'shareable' => $rowdata['shareable'],
+                    'call_to_action' => $rowdata['call_to_action'],
+                    'app_install_properties' => $properties,
+                );
+            case 'WEB_VIEW':
+                $properties = array(
+                    'url' => $rowdata['url'],
+                );
+                if(isset($rowdata['allow_snap_javascript_sdk'])) {
+                    $properties = array(
+                        'allow_snap_javascript_sdk' => $rowdata['allow_snap_javascript_sdk'],
+                    );
+                }
+                $properties = json_encode($properties);
+
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'top_snap_media_id' => $rowdata['top_snap_media_id'],
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'shareable' => $rowdata['shareable'],
+                    'call_to_action' => $rowdata['call_to_action'],
+                    'app_install_properties' => $properties,
+                );
+            case 'DEEP_LINK':
+                $properties = array(
+                    'deep_link_uri' => $rowdata['deep_link_uri'],
+                    'ios_app_id' => $rowdata['ios_app_id'],
+                    'android_app_url' => $rowdata['android_app_url'],
+                    'app_name' => $rowdata['app_name'],
+                    'icon_media_id' => $rowdata['icon_media_id'],
+                );
+                $properties = json_encode($properties);
+
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'top_snap_media_id' => $rowdata['top_snap_media_id'],
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'shareable' => $rowdata['shareable'],
+                    'call_to_action' => $rowdata['call_to_action'],
+                    'brand_name' => $rowdata['brand_name'],
+                    'top_snap_crop_position' => $rowdata['top_snap_crop_position'],
+                    'deep_link_properties' => $properties,
+                );
+            case 'PREVIEW':
+                $properties = array(
+                    'preview_media_id' => $rowdata['preview_media_id'],
+                    'logo_media_id' => $rowdata['logo_media_id'],
+                    'preview_headline' => $rowdata['preview_headline'],
+                );
+                $properties = json_encode($properties);
+
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'preview_properties' => $properties,
+                );
+            case 'AD_TO_LENS':
+                $properties = array(
+                    'lens_media_id' => $rowdata['preview_media_id'],
+                );
+                $properties = json_encode($properties);
+
+                $creativeType = array(
+                    'ad_account_id' => $add_account_id,
+                    'name' => $rowdata['name'],
+                    'type' => $rowdata['type'],
+                    'shareable' => $rowdata['shareable'],
+                    'headline' => $rowdata['headline'],
+                    'brand_name' => $rowdata['brand_name'],
+                    'call_to_action' => $rowdata['call_to_action'],
+                    'top_snap_media_id' => $rowdata['top_snap_media_id'],
+                    'top_snap_crop_position' => $rowdata['top_snap_crop_position'],
+                    'ad_product' => $rowdata['ad_product'],
+                    'ad_to_lens_properties' => $properties,
+                );
+        }
+
+        $postFields['creatives'] = $creativeType;
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $add_account_id . '/creatives');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $resultCreativeType = curl_exec($ch);
+        
+        curl_close($ch);
+
+        if($resultCreativeType['error'])  {
+            switch($resultCreativeType['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $resultCreativeType = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($resultCreativeType['error']);
+            }
+        }
+
+        curl_close($ch);
+
+        return array(
+            'creative_id' =>  $result['creatives']['creative']['id'],
+            'creative_type_id' =>  $resultCreativeType['creatives']['creative']['id']
+        );
 
      }
 
@@ -455,9 +591,16 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
                 $result = curl_exec($ch);
-                if (curl_errno($ch)) {
-                    return array('error' => curl_error($ch));
-                    
+
+                if($result['error'])  {
+                    switch($result['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($result['error']);
+                    }
                 }
                 curl_close($ch);
 
@@ -509,8 +652,15 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
                 $result = curl_exec($ch);
-                if (curl_errno($ch)) {
-                    return array('error' => curl_error($ch));
+                if($result['error'])  {
+                    switch($result['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($result['error']);
+                    }
                 }
                 curl_close($ch);
 
@@ -531,7 +681,159 @@
 
      function upload_large_snapchat($access_token, $media_id)
      {
-        //To Do
+        $file_name = $_POST['file_name'];
+        $file_size = $_POST['file_size'];
+        $number_of_parts = $_POST['number_of_parts'];
+
+        $media = array($file_name, $file_size, $number_of_parts);
+
+        $typeData = array('string', 'integer', 'integer');
+
+        $validate = validate_type($media, $typeData);
+
+        if($validate != "OK") {
+            return array('error' => $validate);
+
+        }
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/media/' . $media_id . '/multipart-upload-v2?action=INIT');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($media));
+
+        $headers = array();
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        $headers[] = 'Content-Type: multipart/form-data';
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+        $upload_id = null;
+        $add_path = null;
+        $finalize_path = null;
+
+        $response = json_decode($result, true);
+        $upload_id = $response['upload_id'];
+        $add_path = $response['add_path'];
+        $finalize_path = $response['finalize_path'];
+
+        curl_close($ch);
+
+        return array( 'result' => $response);
+     }
+
+     function upload_part_snapchat($access_token, $media_id)
+     {
+        $upload_id = $_POST['upload_id'];
+        $part_number = $_POST['part_number'];
+
+        $media = array($upload_id, $part_number);
+
+        $typeData = array('string', 'integer');
+
+        $validate = validate_type($media, $typeData);
+
+        if($validate != "OK") {
+            return array('error' => $validate);
+
+        }
+
+        if(isset($_FILES['file'])){
+            $errors= array();
+            $file_name = $_FILES['file']['name'];
+            $file_size =$_FILES['file']['size'];
+            $file_tmp =$_FILES['file']['tmp_name'];
+            $file_type=$_FILES['file']['type'];
+            $file_ext=strtolower(end(explode('.',$_FILES['file']['name'])));
+            
+            $extensions= array("mov","mp4");
+            
+            if(in_array($file_ext,$extensions)=== false){
+               $errors[]="extension not allowed, please choose a MOV or MP4 file.";
+            }
+            
+            if(empty($errors)==true){
+               
+                $ch = curl_init();
+
+                curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/us/v1/media/' . $media_id . '/multipart-upload-v2?action=ADD');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $_FILES['file']);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($media));
+
+                $headers = array();
+                $headers[] = 'Content-Type: multipart/form-data';
+                $headers[] = 'Authorization: Bearer ' . $access_token;
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+                $result = curl_exec($ch);
+                if($result['error'])  {
+                    switch($result['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($result['error']);
+                    }
+                }
+                curl_close($ch);
+
+                return array(
+                    'result' => $result
+                );
+
+            }else{
+               return array(
+                    'errors' => $errors
+                );
+            }
+         }else {
+            return array('error' => "No media found");
+         }
+     }
+
+     function upload_part_finalize($access_token, $media_id)
+     {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/media/' . $media_id . '/multipart-upload-v2?action=FINALIZE');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+
+        $headers = array();
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        $headers[] = 'Content-Type: multipart/form-data';
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+        curl_close($ch);
+
+        return array('result' => $result);
      }
 
      
