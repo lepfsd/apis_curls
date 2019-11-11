@@ -18,8 +18,7 @@
         $validate = validate_type($campaign, $typeData);
 
         if($validate != "OK") {
-            echo json_response($message = $validate, $code = 409);
-            die;
+            return array('error' => $validate);
         }
         
         $campaign['start_time'] = get_format_time(new DateTime($rowdata['start_time']));
@@ -326,7 +325,7 @@
         if($media_id === null) {
             return array('error' => "Error to create media");
             
-        } /*else {
+        } else {
             if($rowdata['type'] == "IMAGE") {
 
                 $response = upload_image_snapchat($access_token, $media_id);
@@ -348,7 +347,7 @@
                     return array('error' => $response['error']);
                 }
             }
-        } */
+        } 
 
         // creative 
         $typeData = null;
@@ -835,6 +834,8 @@
 
      function creative_editar_snapchat($appid, $access_token, $userid, $add_account_id, $rowdata)
      {
+        $media_id = null;
+
         $webProperties = array(
             'url' => $rowdata['url'],
             'allow_snap_javascript_sdk' => $rowdata['allow_snap_javascript_sdk'],
@@ -855,10 +856,11 @@
             'brand_name' => $rowdata['brand_name'],
             'id' => $rowdata['id'],
             'headline' => $rowdata['headline'],
-            'web_view_properties' => $webPropertiess
+            'web_view_properties' => $webProperties,
+            'status' => $rowdata['status'],
         );
 
-        $typeData = array('string', 'string', 'string', 'string', 'string',);
+        $typeData = array('string', 'string', 'string', 'string', 'string', 'string',);
 
         $temp = array();
         $typeTemp = array();
@@ -917,7 +919,31 @@
         
                 curl_close($ch);
 
-                return array('id' => $result['creatives']['creative']['id']);
+                if($result['request_status'] == "success") {
+                    $media_id = $result['media']['media']['id'];
+                }
+
+                if($rowdata['type'] == "IMAGE") {
+
+                    $response = upload_image_snapchat($access_token, $media_id);
+    
+                    if(isset($response['error'])) {
+                        return array('error' => $response['error']);
+                    }
+                    
+                } else if($rowdata['type'] == "VIDEO" && $rowdata['size'] <= 32097152) { // unidades de bit
+                    $response = upload_video_snapchat($access_token, $media_id);
+    
+                    if(isset($response['error'])) {
+                        return array('error' => $response['error']);
+                    }
+                }  else if($rowdata['type'] == "VIDEO" && $rowdata['size'] > 32097152) { // unidades de bit
+                    $response = upload_large_snapchat($access_token, $media_id);
+    
+                    if(isset($response['error'])) {
+                        return array('error' => $response['error']);
+                    }
+                }
 
             } else {
                 return array('error' => "creative not found");
@@ -974,6 +1000,77 @@
 
         return $result;
 
+     }
+
+
+     function creative_editar_estado_snapchat($appid, $access_token, $userid, $rowdata) 
+     {
+        $response = creative_editar_snapchat($appid, $access_token, $userid, $rowdata);
+     }
+
+     function adgroup_crear_snapchat($appid, $access_token, $user_id, $campaignid, $rowdata)
+     {
+         $targeting = [];
+         $geos = [];
+
+         $geos = array('country_code' => $rowdata['country_code']);
+         
+         $start_time = get_format_time(new DateTime($rowdata['start_time']));
+         $targeting = array(
+             'geos' => $geos,
+             'start_time' => $start_time
+         );
+         $targeting = json_encode($targeting);
+
+        $adsquad = array(
+            'campaign_id' => $rowdata['campaign_id'],
+            'name' => $rowdata['name'],
+            'type' => $rowdata['type'],
+            'placement' => $rowdata['placement'],
+            'optimization_goal' => $rowdata['optimization_goal'],
+            'bid_micro' => $rowdata['bid_micro'],
+            'daily_budget_micro' => $rowdata['daily_budget_micro'],
+            'billing_event' => $rowdata['billing_event'],
+            'targeting' => $targeting,
+        );
+
+        $typeData = array('string', 'string', 'string', 'string', 'string', 'integer', 'integer',
+            'string', 'string');
+
+        $validate = validate_type($adsquad, $typeData);
+
+        if($validate != "OK") {
+           return array('error' => $validate);
+        }
+        
+        $postFields['adsquads'] = $adsquad;
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/campaigns/' . $campaignid .'/adsquads');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+        curl_close($ch);
+
+        return array('id' => $result['adsquads']['adsquads']['id']);
      }
 
      
