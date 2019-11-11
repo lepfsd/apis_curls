@@ -63,7 +63,7 @@
     /* 
      *  Borrar campaña 
      */
-    function campaign_borrar_snapchat($appid, $access_token, $user_id, $rowdata)
+    function campaign_borrar_snapchat($appid, $access_token, $userid, $rowdata)
     {   
         
         $id = $rowdata['id_en_platform'];
@@ -115,7 +115,7 @@
     /* 
      *  Editar campaña 
      */
-    function campaign_edit_snapchat($appid, $access_token, $user_id, $rowdata)
+    function campaign_edit_snapchat($appid, $access_token, $userid, $rowdata)
     {
         
         $campaignParams = array(
@@ -146,7 +146,7 @@
             return array('error' => $validate);
         }
 
-        $campaign = campaign_get_snapchat($appid, $access_token, $user_id, $campaignParams['id']);
+        $campaign = campaign_get_snapchat($appid, $access_token, $userid, $campaignParams['id']);
 
         if($campaign['request_status'] == "success" && !empty($campaign['campaigns'])) {
             $item = $campaign['campaigns'][0];
@@ -212,9 +212,9 @@
     /* 
      *  Consultar campaña en específico
      */
-     function campaign_get_snapchat($appid, $access_token, $user_id, $rowdata) 
+     function campaign_get_snapchat($appid, $access_token, $userid, $rowdata) 
      {
-        $id = $rowdata['id_en_platform']; 
+        $id = $rowdata['id']; 
 
         $typeData = array('integer');
 
@@ -231,7 +231,6 @@
         curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/campaigns/' . $id);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-
 
         $headers = array();
         $headers[] = 'Authorization: Bearer ' . $access_token;
@@ -256,22 +255,20 @@
 
         curl_close($ch);
 
-        echo json_response($message = $result, $code = 200);
-
         return $result;
      }
 
      /* 
      *  Cambiar estatus de una campaña en específico
      */
-     function campaign_estado_snapchat($appid, $access_token, $user_id, $rowdata)
+     function campaign_estado_snapchat($appid, $access_token, $userid, $rowdata)
      {
 
-        $response = campaign_edit_snapchat($appid, $access_token, $user_id, $rowdata);
+        $response = campaign_edit_snapchat($appid, $access_token, $userid, $rowdata);
 
      }
 
-     function creative_crear_snapchat($appid, $access_token, $user_id, $campaignid, $add_account_id, $rowdata)
+     function creative_crear_snapchat($appid, $access_token, $userid, $campaignid, $add_account_id, $rowdata)
      {
 
         $media_id = null;
@@ -834,6 +831,149 @@
         curl_close($ch);
 
         return array('result' => $result);
+     }
+
+     function creative_editar_snapchat($appid, $access_token, $userid, $add_account_id, $rowdata)
+     {
+        $webProperties = array(
+            'url' => $rowdata['url'],
+            'allow_snap_javascript_sdk' => $rowdata['allow_snap_javascript_sdk'],
+            'block_preload' => $rowdata['block_preload'],
+            'type' => $rowdata['type'],
+            'ad_product' => $rowdata['ad_product'],
+            'top_snap_media_id' => $rowdata['top_snap_media_id'],
+            'top_snap_crop_position' => $rowdata['top_snap_crop_position'],
+            'name' => $rowdata['name'],
+            'call_to_action' => $rowdata['call_to_action'],
+            'shareable' => $rowdata['shareable'],
+        );
+
+        $webProperties = json_encode($webProperties);
+
+        $creativeParams = array(
+            'ad_account_id' => $add_account_id,
+            'brand_name' => $rowdata['brand_name'],
+            'id' => $rowdata['id'],
+            'headline' => $rowdata['headline'],
+            'web_view_properties' => $webPropertiess
+        );
+
+        $typeData = array('string', 'string', 'string', 'string', 'string',);
+
+        $temp = array();
+        $typeTemp = array();
+
+        foreach ($creativeParams as $key => $value) {
+            if (!is_null($value) && isset($value)) {
+                $temp[] = $value;
+                $tipo = $typeData[$key];
+                $typeTemp[] = $tipo;
+            }
+        }
+
+        $validate = validate_type($temp, $typeTemp);
+
+        $creative = creative_get_snapchat($appid, $access_token, $userid, $rowdata);
+
+        if($campaign['request_status'] == "success" && !empty($creative['creatives'])) {
+            $item = $creative['creatives'][0];
+            if($item['id'] === $creativeParams['id']){
+                foreach ($creativeParams as $key => $value) {
+                    if (!is_null($value) && isset($value)) {
+                        $item[$key] = $value[$key];  
+                    }
+                }
+                $postFields['creatives'] = $item;
+                $ch = curl_init();
+        
+                curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $creativeParams['id'] . '/creatives');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_POST, 1);
+        
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
+        
+                $headers = array();
+                $headers[] = 'Authorization: Bearer ' . $access_token;
+                $headers[] = 'Content-Type: application/json';
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    //echo 'Error:' . curl_error($ch);
+                    return array('error' => curl_error($ch));                        
+                    
+                }
+        
+                if($result['error'])  {
+                    switch($result['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($result['error']);
+                    }
+                }
+        
+                curl_close($ch);
+
+                return array('id' => $result['creatives']['creative']['id']);
+
+            } else {
+                return array('error' => "creative not found");
+            }
+            
+        } else {
+            return array('error' => "creative not found");
+        }
+
+     }
+
+     function creative_get_snapchat($appid, $access_token, $userid, $rowdata)
+     {
+        $id = $rowdata['id_en_platform']; 
+
+        $typeData = array('integer');
+
+        $data = array($id);
+
+        $validate = validate_type($data, $typeData);
+        
+        if($validate != "OK") {
+            return array('error' => $validate);
+        }
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/creatives/' . $id);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+
+        $headers = array();
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+
+            return array('error' => curl_error($ch));     
+        }
+
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+
+        curl_close($ch);
+
+        return $result;
+
      }
 
      
