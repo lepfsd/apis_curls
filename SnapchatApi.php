@@ -215,7 +215,7 @@
      {
         $id = $rowdata['id']; 
 
-        $typeData = array('integer');
+        $typeData = array('string');
 
         $data = array($id);
 
@@ -236,10 +236,7 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-
-            return array('error' => curl_error($ch));     
-        }
+        
 
         if($result['error'])  {
             switch($result['error']) {

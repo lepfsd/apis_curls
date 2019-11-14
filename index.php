@@ -1,5 +1,5 @@
 <?php
-    require_once "./Snapchat.php";
+    require_once "./SnapchatApi.php";
     
     $rowdata = array(
         'name' => "Cool Campaign",
@@ -9,6 +9,7 @@
         'id' => 1
     );
 
+    echo 'Current PHP version: ' . phpversion();
 
-
+    
 ?>
