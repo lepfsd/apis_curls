@@ -1,18 +1,21 @@
 <?php
    require_once "./Helper.php";
+   require_once "./tokens.php";
+   
  
     /* 
      *  Crear campaña 
      */
     function campaign_crear_snapchat($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata)
     {
+        
         $campaign = array(
             'name' => $rowdata['name'],
             'ad_account_id' => $add_account_id,
             'status' => $rowdata['status'],
             'start_time' => $rowdata['start_time'],
         );
-
+        
         $typeData = array('string', 'string', 'string', 'string');
 
         $validate = validate_type($campaign, $typeData);
@@ -24,7 +27,7 @@
         $campaign['start_time'] = get_format_time(new DateTime($rowdata['start_time']));
         
         $postFields['campaigns'] = $campaign;
-
+        
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $add_account_id . '/campaigns');
@@ -38,12 +41,9 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            return array('error' => curl_error($ch));
-        }
-
-        if($result['error'])  {
+        print("<pre>".print_r($result,true)."</pre>");
+        die;
+        if((curl_errno($ch)) && ($result['request_status'] == "ERROR"))  {
             switch($result['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
@@ -56,7 +56,27 @@
 
         curl_close($ch);
 
-        return array('id' => $result['campaigns']['campaign']['id']);
+        $response = array();
+
+        if($result['request_status'] == "ERROR") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'debug_message' => $result['debug_message'],
+                'display_message' => $result['display_message'],
+                'error_code' => $result['error_code'],
+            );
+        } else if($result['request_status'] == "success") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'debug_message' => $result['debug_message'],
+                'display_message' => $result['display_message'],
+                'error_code' => $result['error_code'],
+            );
+        }
+
+        return $response;
     }
 
     /* 

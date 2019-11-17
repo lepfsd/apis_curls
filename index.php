@@ -1,6 +1,10 @@
 <?php
     require_once "./SnapchatApi.php";
-    
+    require_once "./tokens.php";
+
+    $access_token = $snapchat['access_token'];
+    $add_account_id = $snapchat['adacc_account_id'];
+
     $rowdata = array(
         'name' => "Cool Campaign",
         'ad_account_id' => "3b0fbace-04b4-4f04-a425-33b5e0af1d0d",
@@ -9,7 +13,6 @@
         'id' => 1
     );
 
-    echo 'Current PHP version: ' . phpversion();
-
-    
+    campaign_crear_snapchat("", "",$access_token,"", $add_account_id,$rowdata);
+    //print_r($res);die;
 ?>
