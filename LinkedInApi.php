@@ -377,7 +377,38 @@
 
    }
 
+   function creative_delete_linkedin($appid, $access_token, $userid, $rowdata, $creative_id)
+    {   
+        
+        $ch = curl_init();
 
+        curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCreativesV2/' . $creative_id);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+
+
+        $headers = array();
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+
+        curl_close($ch);
+
+        return $result;
+
+	}
 
 
 ?>

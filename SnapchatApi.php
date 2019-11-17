@@ -70,9 +70,8 @@
             $response = array(
                 'request_status' => $result['request_status'],
                 'request_id' => $result['request_id'],
-                'debug_message' => $result['debug_message'],
-                'display_message' => $result['display_message'],
-                'error_code' => $result['error_code'],
+                'display_message' => "Campaign created successfylly",
+                'campaigns' => $result['campaigns'],
             );
         }
 
@@ -127,7 +126,25 @@
 
         curl_close($ch);
 
-        return array('status' => $result['request_status']);
+        $response = array();
+
+        if($result['request_status'] == "ERROR") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'debug_message' => $result['debug_message'],
+                'display_message' => $result['display_message'],
+                'error_code' => $result['error_code'],
+            );
+        } else if($result['request_status'] == "success") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'display_message' => "Campaign deleted successfylly"
+            );
+        }
+
+        return $response;
 
     }
 
@@ -215,7 +232,25 @@
         
                 curl_close($ch);
 
-                return array('id' => $result['campaigns']['campaign']['id']);
+                $response = array();
+
+        if($result['request_status'] == "ERROR") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'debug_message' => $result['debug_message'],
+                'display_message' => $result['display_message'],
+                'error_code' => $result['error_code'],
+            );
+        } else if($result['request_status'] == "success") {
+            $response = array(
+                'request_status' => $result['request_status'],
+                'request_id' => $result['request_id'],
+                'display_message' => "Campaign updated successfylly"
+            );
+        }
+
+        return $response;
 
             } else {
                 return array('error' => "campaign not found");
