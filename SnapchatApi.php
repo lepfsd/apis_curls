@@ -25,8 +25,8 @@
         }
         
         $campaign['start_time'] = get_format_time(new DateTime($rowdata['start_time']));
-        
-        $postFields['campaigns'] = $campaign;
+        //te recomiendo usas el codigo que te envie, la campana ya estaba ok
+        $postFields['campaigns'] = [$campaign];
         
         $ch = curl_init();
 
@@ -41,10 +41,10 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-        print("<pre>".print_r($result,true)."</pre>");
-        die;
-        if((curl_errno($ch)) && ($result['request_status'] == "ERROR"))  {
-            switch($result['error']) {
+        $json = json_decode($result, true);
+        
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
@@ -57,21 +57,22 @@
         curl_close($ch);
 
         $response = array();
-
-        if($result['request_status'] == "ERROR") {
+        
+        if($json['request_status'] == "ERROR") {
             $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
-                'debug_message' => $result['debug_message'],
-                'display_message' => $result['display_message'],
-                'error_code' => $result['error_code'],
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
+                'debug_message' => isset($json['debug_message']) ? $json['debug_message'] : "",
+                'display_message' => isset($json['display_message']) ? $json['display_message'] : "",
+                'error_code' => isset($json['error_code']) ? $json['error_code'] : "",
+                'error_code' => isset($json['campaigns'][0]['sub_request_error_reason']) ? $json['campaigns'][0]['sub_request_error_reason'] : "",
             );
-        } else if($result['request_status'] == "success") {
+        } else if($json['request_status'] == "SUCCESS") {
             $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
                 'display_message' => "Campaign created successfylly",
-                'campaigns' => $result['campaigns'],
+                'campaigns' => $json['campaigns'],
             );
         }
 
@@ -108,13 +109,15 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
+       
+        $json = json_decode($result, true);
 
         if (curl_errno($ch)) {
             return array('error' => curl_error($ch));
         }
-
-        if($result['error'])  {
-            switch($result['error']) {
+        
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
@@ -127,19 +130,20 @@
         curl_close($ch);
 
         $response = array();
-
-        if($result['request_status'] == "ERROR") {
+        
+        if($json['request_status'] == "ERROR") {
             $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
-                'debug_message' => $result['debug_message'],
-                'display_message' => $result['display_message'],
-                'error_code' => $result['error_code'],
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
+                'debug_message' => isset($json['debug_message']) ? $json['debug_message'] : "",
+                'display_message' => isset($json['display_message']) ? $json['display_message'] : "",
+                'error_code' => isset($json['error_code']) ? $json['error_code'] : "",
+                'error_code' => isset($json['campaigns'][0]['sub_request_error_reason']) ? $json['campaigns'][0]['sub_request_error_reason'] : "",
             );
-        } else if($result['request_status'] == "success") {
+        } else if($json['request_status'] == "SUCCESS") {
             $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
                 'display_message' => "Campaign deleted successfylly"
             );
         }
@@ -162,8 +166,8 @@
             'end_time' => $rowdata['start_time'],
             'id' => $rowdata['id_en_platform'],
         );
-
-        $typeData = array('string', 'string', 'string', 'string', 'string', 'string');
+        
+        /*$typeData = array('string', 'string', 'string', 'string', 'string');
 
         $temp = array();
         $typeTemp = array();
@@ -171,34 +175,27 @@
         foreach ($campaignParams as $key => $value) {
             if (!is_null($value) && isset($value)) {
                 $temp[] = $value;
-                $tipo = $typeData[$key];
-                $typeTemp[] = $tipo;
+                $typeTemp[] = $typeTemp['string'];
             }
         }
-
-        $validate = validate_type($temp, $typeTemp);
-
+        
+        $validate = validate_type($temp, $typeTemp); 
+       
         if($validate != "OK") {
             return array('error' => $validate);
-        }
-
-        $campaign = campaign_get_snapchat($appid, $access_token, $userid, $campaignParams['id']);
-
-        if($campaign['request_status'] == "success" && !empty($campaign['campaigns'])) {
-            $item = $campaign['campaigns'][0];
+        }*/
+        $id = array('id_en_platform' =>  $campaignParams['id']);
+        $campaign = campaign_get_snapchat($appid, $access_token, $userid, $id);
+        
+        if($campaign && !empty($campaign['campaign'])) {
+            $item = $campaign['campaign'];
+            
             if($item['id'] === $campaignParams['id']){
-                foreach ($campaignParams as $key => $value) {
-                    if (!is_null($value) && isset($value)) {
-                        if (array_key_exists('start_time', $campaignParams)) {
-                            $item[$key] = get_format_time(new DateTime($value[$key]));
-                        }
-                        if (array_key_exists('end_time', $campaignParams)) {
-                            $item[$key] = get_format_time(new DateTime($value[$key]));
-                        }
-                        $item[$key] = $value[$key];  
-                    }
-                }
-                $postFields['campaigns'] = $item;
+                
+                $result = array_merge($item, array_intersect_key($campaignParams, $item));
+                
+                $postFields['campaigns'] = [$result];
+                
                 $ch = curl_init();
         
                 curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignParams['id'] . '/campaigns');
@@ -213,14 +210,17 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
                 $result = curl_exec($ch);
+
+                $json = json_decode($result, true);
+                
                 if (curl_errno($ch)) {
                     //echo 'Error:' . curl_error($ch);
                     return array('error' => curl_error($ch));                        
                     
                 }
         
-                if($result['error'])  {
-                    switch($result['error']) {
+                if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+                    switch($json['error']) {
                         case 'invalidtoken':
                             $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                             $headers[] = 'Authorization: Bearer ' . $access_token;
@@ -234,23 +234,25 @@
 
                 $response = array();
 
-        if($result['request_status'] == "ERROR") {
-            $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
-                'debug_message' => $result['debug_message'],
-                'display_message' => $result['display_message'],
-                'error_code' => $result['error_code'],
-            );
-        } else if($result['request_status'] == "success") {
-            $response = array(
-                'request_status' => $result['request_status'],
-                'request_id' => $result['request_id'],
-                'display_message' => "Campaign updated successfylly"
-            );
-        }
+                if($json['request_status'] == "ERROR") {
+                    $response = array(
+                        'request_status' => $json['request_status'],
+                        'request_id' => $json['request_id'],
+                        'debug_message' => isset($json['debug_message']) ? $json['debug_message'] : "",
+                        'display_message' => isset($json['display_message']) ? $json['display_message'] : "",
+                        'error_code' => isset($json['error_code']) ? $json['error_code'] : "",
+                        'error_code' => isset($json['campaigns'][0]['sub_request_error_reason']) ? $json['campaigns'][0]['sub_request_error_reason'] : "",
+                    );
+                } else if($json['request_status'] == "SUCCESS") {
+                    $response = array(
+                        'request_status' => $json['request_status'],
+                        'request_id' => $json['request_id'],
+                        'display_message' => "Campaign created successfylly",
+                        'campaigns' => $json['campaigns'],
+                    );
+                }
 
-        return $response;
+                return $response;
 
             } else {
                 return array('error' => "campaign not found");
@@ -268,8 +270,8 @@
      */
      function campaign_get_snapchat($appid, $access_token, $userid, $rowdata) 
      {
-        $id = $rowdata['id']; 
-
+        $id = $rowdata['id_en_platform']; 
+        
         $typeData = array('string');
 
         $data = array($id);
@@ -291,22 +293,44 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-        
+    
+        $json = json_decode($result, true);
 
-        if($result['error'])  {
-            switch($result['error']) {
+        if (curl_errno($ch)) {
+            return array('error' => curl_error($ch));
+        }
+        
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
                     $result = curl_exec($ch);
                 default:
-                    return procesaerrores_snapchat($result['error']);
+                    return procesaerrores_snapchat($json['error']);
             }
         }
 
         curl_close($ch);
+        
+        $response = array();
+        
+        if($json['request_status'] == "ERROR") {
+            $response = array(
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
+                'debug_message' => isset($json['debug_message']) ? $json['debug_message'] : "",
+                'display_message' => isset($json['display_message']) ? $json['display_message'] : "",
+                'error_code' => isset($json['error_code']) ? $json['error_code'] : "",
+                'error_code' => isset($json['campaigns'][0]['sub_request_error_reason']) ? $json['campaigns'][0]['sub_request_error_reason'] : "",
+            );
+        } else if($json['request_status'] == "SUCCESS") {
+            $response = array(
+                'campaign' => $json['campaigns'][0]['campaign'] ,
+            );
+        }
 
-        return $result;
+        return $response;
      }
 
      /* 
@@ -327,7 +351,7 @@
         $media = array(
             'name' => $rowdata['name'],
             'type' => $rowdata['type'],
-            'ad_account_id' => $campaignid,
+            'ad_account_id' => $add_account_id,
         );
 
         $typeData = array('string', 'string', 'string');
@@ -339,11 +363,11 @@
 
         }
        
-        $postFields['media'] = $media;
+        $postFields['media'] = [$media];
 
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignid . '/media');
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $add_account_id . '/media');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
@@ -354,26 +378,26 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
+
+        $json = json_decode($result, true);
         
         curl_close($ch);
 
-        if($result['error'])  {
-            switch($result['error']) {
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
                     $result = curl_exec($ch);
                 default:
-                    return procesaerrores_snapchat($result['error']);
+                    return procesaerrores_snapchat($json['error']);
             }
         }
 
-        curl_close($ch);
-
-        if($result['request_status'] == "success") {
-            $media_id = $result['media']['media']['id'];
+        if($result['request_status'] == "SUCCESS ") {
+            $media_id = $json['media'][0]['media']['id'];
         }
-
+        
         if($media_id === null) {
             return array('error' => "Error to create media");
             
@@ -423,11 +447,11 @@
             
         }
        
-        $postFields['creatives'] = $creatives;
+        $postFields['creatives'] = [$creatives];
 
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $campaignid . '/creativesINIT\"');
+        curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/adaccounts/' . $ad_account_id . '/creativesINIT\"');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields));
@@ -565,7 +589,7 @@
                 );
         }
 
-        $postFields['creatives'] = $creativeType;
+        $postFields['creatives'] = [$creativeType];
 
         $ch = curl_init();
 
@@ -605,6 +629,7 @@
 
      function upload_image_snapchat($access_token, $media_id)
      {
+        print("<pre>".print_r($_FILES['file'])."</pre>");die;
         if(isset($_FILES['file'])){
             $errors= array();
             $file_name = $_FILES['file']['name'];
@@ -639,23 +664,21 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
                 $result = curl_exec($ch);
+                $json = json_decode($result, true);
 
-                if($result['error'])  {
-                    switch($result['error']) {
+                if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+                    switch($json['error']) {
                         case 'invalidtoken':
                             $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                             $headers[] = 'Authorization: Bearer ' . $access_token;
                             $result = curl_exec($ch);
                         default:
-                            return procesaerrores_snapchat($result['error']);
+                            return procesaerrores_snapchat($json['error']);
                     }
                 }
                 curl_close($ch);
 
-                return array(
-                    'id' => $result['result']['id'],
-                    'status' => $result['request_status']
-                );
+                return $json;
 
             }else{
                return array(
@@ -700,22 +723,21 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
                 $result = curl_exec($ch);
-                if($result['error'])  {
-                    switch($result['error']) {
+                $json = json_decode($result, true);
+
+                if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+                    switch($json['error']) {
                         case 'invalidtoken':
                             $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                             $headers[] = 'Authorization: Bearer ' . $access_token;
                             $result = curl_exec($ch);
                         default:
-                            return procesaerrores_snapchat($result['error']);
+                            return procesaerrores_snapchat($json['error']);
                     }
                 }
                 curl_close($ch);
 
-                return array(
-                    'id' => $result['result']['id'],
-                    'status' => $result['request_status']
-                );
+                return $json;
 
             }else{
                return array(
@@ -758,16 +780,21 @@
 
         $result = curl_exec($ch);
 
-        if($result['error'])  {
-            switch($result['error']) {
+        $json = json_decode($result, true);
+
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
                     $result = curl_exec($ch);
                 default:
-                    return procesaerrores_snapchat($result['error']);
+                    return procesaerrores_snapchat($json['error']);
             }
         }
+        curl_close($ch);
+
+        
         $upload_id = null;
         $add_path = null;
         $finalize_path = null;
@@ -829,21 +856,36 @@
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
                 $result = curl_exec($ch);
-                if($result['error'])  {
-                    switch($result['error']) {
+                $json = json_decode($result, true);
+
+                if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+                    switch($json['error']) {
                         case 'invalidtoken':
                             $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                             $headers[] = 'Authorization: Bearer ' . $access_token;
                             $result = curl_exec($ch);
                         default:
-                            return procesaerrores_snapchat($result['error']);
+                            return procesaerrores_snapchat($json['error']);
                     }
                 }
                 curl_close($ch);
 
-                return array(
-                    'result' => $result
-                );
+
+                $json = json_decode($result, true);
+
+                if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+                    switch($json['error']) {
+                        case 'invalidtoken':
+                            $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                            $headers[] = 'Authorization: Bearer ' . $access_token;
+                            $result = curl_exec($ch);
+                        default:
+                            return procesaerrores_snapchat($json['error']);
+                    }
+                }
+                curl_close($ch);
+
+                return $json;
 
             }else{
                return array(
