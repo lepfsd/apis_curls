@@ -629,7 +629,6 @@
 
      function upload_image_snapchat($access_token, $media_id)
      {
-        print("<pre>".print_r($_FILES['file'])."</pre>");die;
         if(isset($_FILES['file'])){
             $errors= array();
             $file_name = $_FILES['file']['name'];
@@ -637,7 +636,7 @@
             $file_tmp =$_FILES['file']['tmp_name'];
             $file_type=$_FILES['file']['type'];
             $file_ext=strtolower(end(explode('.',$_FILES['file']['name'])));
-            
+            $data = array('name' => $_FILES['file']['name'], 'file' => '@/path/to/'.$_FILES['file']['name']);
             $extensions= array("jpeg","jpg","png","ico");
             
             if(in_array($file_ext,$extensions)=== false){
@@ -677,6 +676,7 @@
                     }
                 }
                 curl_close($ch);
+                print("<pre>".print_r($json)."</pre>");die;
 
                 return $json;
 
@@ -1108,14 +1108,14 @@
          $geos = [];
 
          $geos = array('country_code' => $rowdata['country_code']);
-         
+         $geos = json_encode($geos);
          $start_time = get_format_time(new DateTime($rowdata['start_time']));
          $targeting = array(
-             'geos' => $geos,
+             'geos' => [$geos],
              'start_time' => $start_time
          );
          $targeting = json_encode($targeting);
-
+         
         $adsquad = array(
             'campaign_id' => $rowdata['campaign_id'],
             'name' => $rowdata['name'],
@@ -1133,14 +1133,14 @@
 
         $validate = validate_type($adsquad, $typeData);
 
-        if($validate != "OK") {
-           return array('error' => $validate);
-        }
+        //if($validate != "OK") {
+        //   return array('error' => $validate);
+        //}
         
-        $postFields['adsquads'] = $adsquad;
-
+        $postFields['adsquads'] = [$adsquad];
+        
         $ch = curl_init();
-
+        
         curl_setopt($ch, CURLOPT_URL, 'https://adsapi.snapchat.com/v1/campaigns/' . $campaignid .'/adsquads');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -1152,8 +1152,10 @@
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = curl_exec($ch);
-        if($result['error'])  {
-            switch($result['error']) {
+        $json = json_decode($result, true);
+        
+        if((curl_errno($ch)) && ($json['request_status'] == "ERROR"))  {
+            switch($json['error']) {
                 case 'invalidtoken':
                     $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
                     $headers[] = 'Authorization: Bearer ' . $access_token;
@@ -1162,9 +1164,30 @@
                     return procesaerrores_snapchat($result['error']);
             }
         }
+
         curl_close($ch);
 
-        return array('id' => $result['adsquads']['adsquads']['id']);
+        $response = array();
+        
+        if($json['request_status'] == "ERROR") {
+            $response = array(
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
+                'debug_message' => isset($json['debug_message']) ? $json['debug_message'] : "",
+                'display_message' => isset($json['display_message']) ? $json['display_message'] : "",
+                'error_code' => isset($json['error_code']) ? $json['error_code'] : "",
+                'error_code' => isset($json['adsquads'][0]['sub_request_error_reason']) ? $json['adsquads'][0]['sub_request_error_reason'] : "",
+            );
+        } else if($json['request_status'] == "SUCCESS") {
+            $response = array(
+                'request_status' => $json['request_status'],
+                'request_id' => $json['request_id'],
+                'display_message' => "Ad Squad created successfylly",
+                'adsquads' => $json['adsquads'],
+            );
+        }
+
+        return $response;
      }
 
      

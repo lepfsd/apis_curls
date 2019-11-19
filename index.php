@@ -16,13 +16,21 @@
     ); */
 
     $rowdata = array(
-        'name' => "Media A - Video",
-        'ad_account_id' => "959649dc-29e2-40ac-b1b8-934cd5764741",
-        'type' => "VIDEO",
+        'country_code' => "us",
+        'start_time' => "2016-08-11T22:03:58.869Z",
+        'campaign_id' => "08f8c50f-e37a-4757-899c-6fd47c398f46",
+        'name' => "Ad Squad Uno",
+        'type' => "SNAP_ADS",
+        'placement' => "SNAP_ADS",
+        'optimization_goal' => "IMPRESSIONS",
+        'bid_micro' => 1000000,
+        'daily_budget_micro' => 1000000000,
+        'billing_event' => "IMPRESSION",
     );
 
    //$res =  creative_crear_snapchat("", $access_token, "", "", $add_account_id, $rowdata);
-   $res = upload_image_snapchat($access_token, "b349116e-9d4e-4bf2-8825-5d33d9509b03");
+   $res = adgroup_crear_snapchat("", $access_token, "", "08f8c50f-e37a-4757-899c-6fd47c398f46", $rowdata);
+   
    print("<pre>".print_r($res)."</pre>");die;
    
     //f2d1a164-f9b9-41df-9ce4-da167a391255 
