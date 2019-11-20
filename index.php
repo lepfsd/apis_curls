@@ -27,11 +27,14 @@
         'daily_budget_micro' => 1000000000,
         'billing_event' => "IMPRESSION",
     );
-
-   //$res =  creative_crear_snapchat("", $access_token, "", "", $add_account_id, $rowdata);
-   $res = adgroup_crear_snapchat("", $access_token, "", "08f8c50f-e37a-4757-899c-6fd47c398f46", $rowdata);
+    $data = file_get_contents('php://input');
+    $json = json_decode(file_get_contents('php://input'), true);
+    print("<pre>".print_r($json)."</pre>");
    
-   print("<pre>".print_r($res)."</pre>");die;
+   //$res =  creative_crear_snapchat("", $access_token, "", "", $add_account_id, $rowdata);
+   //$res = adgroup_crear_snapchat("", $access_token, "", "08f8c50f-e37a-4757-899c-6fd47c398f46", $rowdata);
+   
+  // print("<pre>".print_r($json)."</pre>");die;
    
     //f2d1a164-f9b9-41df-9ce4-da167a391255 
 ?>

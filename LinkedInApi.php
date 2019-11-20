@@ -58,6 +58,87 @@
 
    }
 
+   function campaign_group_update_linkedin($appid, $access_token, $userid, $adCampaignGroupId, $rowdata)
+   {
+
+	   $amount = $rowdata['amount'];
+	   $currencyCode = $rowdata['currencyCode'];
+
+	   $campaign = [$amount, $currencyCode,]; 
+
+	   $typeData = array('string', 'string' );
+
+	   if((!isset($rowdata['status'])) && (empty($rowdata['status']))) {
+			$validate = validate_type($campaign, $typeData);
+
+			if($validate != "OK") {
+				return array('error' => $validate);
+			}
+	
+			$data = array(
+				'patch' => array(
+					'$set' => array(
+						'totalBudget' => array(
+							'amount' => $amount,
+							'currencyCode' => $currencyCode
+						)
+					)
+				)
+			);
+
+	   } else {
+			$data = array(
+				'patch' => array(
+					'$set' => array(
+						'status' => $rowdata['status']
+					)
+				)
+			);
+	   }
+	   $ch = curl_init();
+
+	   curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCampaignGroupsV2/' . $adCampaignGroupId);
+	   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	   curl_setopt($ch, CURLOPT_POST, 1);
+	   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+	   $headers = array();
+	   $headers[] = 'Authorization: Bearer ' . $access_token;
+	   $headers[] = 'Content-Type: application/json';
+	   curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+	   $result = curl_exec($ch);
+
+	   if($result['error'])  {
+		   switch($result['error']) {
+			   case 'invalidtoken':
+				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+				   $headers[] = 'Authorization: Bearer ' . $access_token;
+				   $result = curl_exec($ch);
+			   default:
+				   return procesaerrores_snapchat($result['error']);
+		   }
+	   }
+
+	   curl_close($ch);
+	   
+	   return $result;
+
+   }
+
+   function campaign_group_status_linkedin($appid, $access_token, $userid, $adCampaignGroupId, $rowdata)
+   {	
+
+	   if(!isset($rowdata['status'])) {
+			return array('error' => "Status is required");
+	   } 
+
+		$response = campaign_group_update_linkedin($appid, $access_token, $userid, $adCampaignGroupId, $rowdata);
+
+		return $response;
+
+   }
+
    function target_audience_get_linkedin($appid, $access_token, $userid, $rowdata) 
    {
 
@@ -220,6 +301,89 @@
 
    }
 
+   function campaign_update_linkedin($appid, $access_token, $userid, $campaignID, $rowdata)
+    {
+		$amountDailyBudget = $rowdata['amountDailyBudget'];
+		$currencyCodeDailyBudget = $rowdata['currencyCodeDailyBudget'];
+		$amountTotalBudget = $rowdata['amountTotalBudget'];
+		$currencyCodeTotalBudget = $rowdata['currencyCodeTotalBudget'];
+		
+		if(!isset($rowdata['status'])) { 
+			$campaign = array($amountDailyBudget, $currencyCodeDailyBudget, $amountTotalBudget, $currencyCodeTotalBudget);
+
+			$typeData = array('string','string','string','string',);
+
+			$validate = validate_type($campaign, $typeData);
+
+			if($validate != "OK") {
+				return array('error' => $validate);
+			}
+
+			$data = array(
+					'patch' => array(
+						'$set' => array(
+							'dailyBudget' => array(
+								'amount' => $amountDailyBudget,
+								'currencyCode' => $currencyCodeDailyBudget
+							),
+							'totalBudget' => array(
+								'amount' => $amountTotalBudget,
+								'currencyCode' => $currencyCodeTotalBudget
+							)
+						)
+					)
+				);
+		} else {
+			$data = array(
+				'patch' => array(
+					'$set' => array(
+						'status' => $rowdata['status']
+					)
+				)
+			);
+		}
+
+		
+	   
+	   $ch = curl_init();
+
+	   curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCampaignsV2' . $campaignID);
+	   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	   curl_setopt($ch, CURLOPT_POST, 1);
+	   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+	   $headers = array();
+	   $headers[] = 'Authorization: Bearer ' . $access_token;
+	   $headers[] = 'Content-Type: application/json';
+	   curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+	   $result = curl_exec($ch);
+
+	   if($result['error'])  {
+		   switch($result['error']) {
+			   case 'invalidtoken':
+				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+				   $headers[] = 'Authorization: Bearer ' . $access_token;
+				   $result = curl_exec($ch);
+			   default:
+				   return procesaerrores_snapchat($result['error']);
+		   }
+	   }
+
+	   curl_close($ch);
+	   
+	   return $result;
+
+   }
+
+   function campaign_status_linkedin($appid, $access_token, $userid, $campaignID, $rowdata)
+   {
+		if(!isset($rowdata['status'])) {
+			return array('error' => "Status is required");
+		} 
+	 	$response = campaign_update_linkedin($appid, $access_token, $userid, $campaignID, $rowdata);	
+   }
+
 
    function ad_creative_crear_linkedin($appid, $access_token, $userid, $rowdata)
    {
@@ -274,6 +438,127 @@
 	   curl_close($ch);
 	   
 	   return $result;
+
+   }
+
+   function creative_delete_linkedin($appid, $access_token, $userid, $rowdata, $creative_id)
+    {   
+        
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCreativesV2/' . $creative_id);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+
+
+        $headers = array();
+        $headers[] = 'Authorization: Bearer ' . $access_token;
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+
+        if($result['error'])  {
+            switch($result['error']) {
+                case 'invalidtoken':
+                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+                    $headers[] = 'Authorization: Bearer ' . $access_token;
+                    $result = curl_exec($ch);
+                default:
+                    return procesaerrores_snapchat($result['error']);
+            }
+        }
+
+        curl_close($ch);
+
+        return $result;
+
+	}
+
+	function ad_creative_update_linkedin($appid, $access_token, $userid, $creative_id, $rowdata)
+   	{
+
+	   $clickUri = $rowdata['clickUri'];
+	   $text = $rowdata['text'];
+	   $title = $rowdata['title'];
+
+	   $creative = [$clickUri, $text, $title]; 
+
+	   $typeData = array('string', 'string', 'string', );
+
+	   if((!isset($rowdata['status'])) && (empty($rowdata['status']))) {
+			$validate = validate_type($creative, $typeData);
+
+			if($validate != "OK") {
+				return array('error' => $validate);
+			}
+	
+			$data = array(
+				'patch' => array(
+					'$set' => array(
+						'variables' => array(
+							'clickUri' => $clickUri,
+							'data' => array(
+								'com.linkedin.ads.TextAdCreativeVariables' => array(
+									'text' => $text,
+									'title' => $title
+								)
+							)
+						)
+					)
+				)
+			);
+
+	   } else {
+			$data = array(
+				'patch' => array(
+					'$set' => array(
+						'status' => $rowdata['status']
+					)
+				)
+			);
+	   }
+	   
+	   $ch = curl_init();
+
+	   curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCreativesV2/' . $creative_id);
+	   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	   curl_setopt($ch, CURLOPT_POST, 1);
+	   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+	   $headers = array();
+	   $headers[] = 'Authorization: Bearer ' . $access_token;
+	   $headers[] = 'Content-Type: application/json';
+	   curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+	   $result = curl_exec($ch);
+
+	   if($result['error'])  {
+		   switch($result['error']) {
+			   case 'invalidtoken':
+				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+				   $headers[] = 'Authorization: Bearer ' . $access_token;
+				   $result = curl_exec($ch);
+			   default:
+				   return procesaerrores_snapchat($result['error']);
+		   }
+	   }
+
+	   curl_close($ch);
+	   
+	   return $result;
+
+   }
+
+   function ad_creative_status_linkedin($appid, $access_token, $userid, $creative_id, $rowdata)
+   {	
+
+	   if(!isset($rowdata['status'])) {
+			return array('error' => "Status is required");
+	   } 
+
+		$response = ad_creative_update_linkedin($appid, $access_token, $userid, $creative_id, $rowdata);
+
+		return $response;
 
    }
 
@@ -377,38 +662,7 @@
 
    }
 
-   function creative_delete_linkedin($appid, $access_token, $userid, $rowdata, $creative_id)
-    {   
-        
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCreativesV2/' . $creative_id);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-
-
-        $headers = array();
-        $headers[] = 'Authorization: Bearer ' . $access_token;
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $result = curl_exec($ch);
-
-        if($result['error'])  {
-            switch($result['error']) {
-                case 'invalidtoken':
-                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                    $headers[] = 'Authorization: Bearer ' . $access_token;
-                    $result = curl_exec($ch);
-                default:
-                    return procesaerrores_snapchat($result['error']);
-            }
-        }
-
-        curl_close($ch);
-
-        return $result;
-
-	}
+   
 
 
 ?>
