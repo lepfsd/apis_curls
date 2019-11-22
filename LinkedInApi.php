@@ -58,35 +58,36 @@
 
    }
 
-   function campaign_get_linkedin($appid, $access_token, $userid) 
+   function ad_analitics_get_linkedin($appid, $access_token, $userid) 
 	{
+		$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-	   $ch = curl_init();
+		$ch = curl_init();
 
-	   curl_setopt($ch, CURLOPT_URL, 'https://api.linkedin.com/v2/adCampaignsV2');
-	   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
 
-	   $headers = array();
-	   $headers[] = 'Authorization: Bearer ' . $access_token;
-	   curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		$headers = array();
+		$headers[] = 'Authorization: Bearer ' . $access_token;
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-	   $result = curl_exec($ch);
+		$result = curl_exec($ch);
 
-	   if($result['errors'])  {
-		   switch($result['errors']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+		if($result['errors'])  {
+			switch($result['errors']) {
+				case 'invalidtoken':
+					$access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
+					$headers[] = 'Authorization: Bearer ' . $access_token;
+					$result = curl_exec($ch);
+				default:
+					return procesaerrores_snapchat($result['error']);
+			}
+		}
 
-	   curl_close($ch);
+		curl_close($ch);
 
-	   return array('data' => $result['data']);
+		return array('data' => $result['elements']);
 	}
 
    function campaign_group_update_linkedin($appid, $access_token, $userid, $adCampaignGroupId, $rowdata)

@@ -31,7 +31,9 @@
     $json = json_decode(file_get_contents('php://input'), true);
     print("<pre>".print_r($json)."</pre>");
 
-    $res =  campaign_crear_snapchat($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata);
+    $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    print("<pre>".print_r($url)."</pre>");
+//$res =  campaign_crear_snapchat($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata);
    
    //$res =  creative_crear_snapchat("", $access_token, "", "", $add_account_id, $rowdata);
    //$res = adgroup_crear_snapchat("", $access_token, "", "08f8c50f-e37a-4757-899c-6fd47c398f46", $rowdata);
