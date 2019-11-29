@@ -29,10 +29,13 @@
     );
     $data = file_get_contents('php://input');
     $json = json_decode(file_get_contents('php://input'), true);
-    print("<pre>".print_r($json)."</pre>");
+    
 
     $url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    print("<pre>".print_r($url)."</pre>");
+    
+    $startmonth = "12";
+    $var = "DAILY&dateRange.start.month={$startmonth}&dateRange";
+    print("<pre>".print_r($var)."</pre>");
 //$res =  campaign_crear_snapchat($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata);
    
    //$res =  creative_crear_snapchat("", $access_token, "", "", $add_account_id, $rowdata);

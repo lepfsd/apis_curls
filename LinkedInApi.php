@@ -41,16 +41,11 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
+
 
 	   curl_close($ch);
 	   
@@ -74,15 +69,9 @@
 
 		$result = curl_exec($ch);
 
-		if($result['errors'])  {
-			switch($result['errors']) {
-				case 'invalidtoken':
-					$access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-					$headers[] = 'Authorization: Bearer ' . $access_token;
-					$result = curl_exec($ch);
-				default:
-					return procesaerrores_snapchat($result['error']);
-			}
+		if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
 		}
 
 		curl_close($ch);
@@ -141,16 +130,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -186,16 +169,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['errors'])  {
-		   switch($result['errors']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+				
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 
@@ -217,16 +194,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['errors'])  {
-		   switch($result['errors']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 
@@ -248,16 +219,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['errors'])  {
-		   switch($result['errors']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 
@@ -316,16 +281,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -391,16 +350,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -456,16 +409,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -489,16 +436,10 @@
 
         $result = curl_exec($ch);
 
-        if($result['error'])  {
-            switch($result['error']) {
-                case 'invalidtoken':
-                    $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-                    $headers[] = 'Authorization: Bearer ' . $access_token;
-                    $result = curl_exec($ch);
-                default:
-                    return procesaerrores_snapchat($result['error']);
-            }
-        }
+        if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
         curl_close($ch);
 
@@ -564,16 +505,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -627,16 +562,10 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
@@ -677,24 +606,15 @@
 
 	   $result = curl_exec($ch);
 
-	   if($result['error'])  {
-		   switch($result['error']) {
-			   case 'invalidtoken':
-				   $access_token =  refrescatoken_snapchat($appid, $userid, $accestoken);
-				   $headers[] = 'Authorization: Bearer ' . $access_token;
-				   $result = curl_exec($ch);
-			   default:
-				   return procesaerrores_snapchat($result['error']);
-		   }
-	   }
+	   if (curl_errno($ch)) {
+			
+			return procesaerrores_linkedin (['error' => curl_error($ch)]);
+		}
 
 	   curl_close($ch);
 	   
 	   return $result;
 
    }
-
-   
-
 
 ?>
