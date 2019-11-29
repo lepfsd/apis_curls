@@ -30,7 +30,7 @@ function fb_creacampana($app_id, $app_secret,$access_token,$userid, $add_account
 	$fields=array();
 	$params = array(
 	  'name' =>$userid.'|'.$rowdata['id'].':'. $rowdata['name'].' '.date('Y/m/d h:i:s a', time()) ,
-	  'objective' => 'REACH', //ver esto https://developers.facebook.com/docs/reference/ads-api/adcampaign#create
+	  'objective' => $rowdata['objective'], //ver esto https://developers.facebook.com/docs/reference/ads-api/adcampaign#create
 		//enum{APP_INSTALLS, BRAND_AWARENESS, CONVERSIONS, EVENT_RESPONSES, LEAD_GENERATION, LINK_CLICKS, LOCAL_AWARENESS, MESSAGES, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, PRODUCT_CATALOG_SALES, REACH, VIDEO_VIEWS}
 	  'status' => 'PAUSED',
 	);
@@ -226,6 +226,36 @@ function fb_creacreative($app_id, $app_secret,$access_token,$userid, $add_accoun
 				AdCreativeFields::OBJECT_STORY_ID => $rowdata['post_id'],
 			  ));
 			  $creative->create();
+		case 'SIGN_UP': 
+			$object_story_spec = new AdCreativeObjectStorySpec();
+			$object_story_spec->setData(array(
+			  AdCreativeObjectStorySpecFields::PAGE_ID => $rowdata['page_id'],
+			  AdCreativeObjectStorySpecFields::TEMPLATE_DATA =>
+				(new AdCreativeLinkData())->setData(array(
+				  AdCreativeLinkDataFields::CALL_TO_ACTION => array(
+					'type' => AdCreativeCallToActionTypeValues::SIGN_UP,
+					'value' => array(
+					  'lead_gen_form_id' => $rowdata['form_id'],
+					),
+				  ),
+				  AdCreativeLinkDataFields::MESSAGE => $rowdata['message'],
+				  AdCreativeLinkDataFields::LINK => $rowdata['link'],
+				  AdCreativeLinkDataFields::NAME => $rowdata['name'],
+				  AdCreativeLinkDataFields::DESCRIPTION =>$rowdata['description'],
+				  
+				  AdCreativeLinkDataFields::MULTI_SHARE_END_CARD => false,
+				)),
+			));
+			
+			$creative = new AdCreative(null, $add_account_id);
+			
+			$creative->setData(array(
+			  AdCreativeFields::NAME => 'Dynamic Ad With Leadgen Template Creative Sample',
+			  AdCreativeFields::OBJECT_STORY_SPEC => $object_story_spec,
+			  AdCreativeFields::PRODUCT_SET_ID => $rowdata['product_id'],
+			));
+			
+			$creative->create();
 		default:
 			
 	}
@@ -430,3 +460,65 @@ function fb_readproduct_catalog($app_id, $app_secret,$access_token,$userid, $add
 	return $graphNode;
 }
 
+// travel https://developers.facebook.com/docs/marketing-api/travel-ads
+
+function fb_creartravel_ads($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata, $adset_id, $adcreative_id) {
+
+	$api = Api::init($app_id, $app_secret ,$access_token);
+	$api->setLogger(new CurlLogger());
+	$fields=array();
+	$params = array(
+	  'name' =>$userid.'|'.$rowdata['id'].':'. $rowdata['name'].' '.date('Y/m/d h:i:s a', time()) ,
+	  'adset_id' => $adset_id,
+	  'creative' => array('creative_id' => $adcreative_id),
+  	  'status' => 'PAUSED',
+	);
+
+	$travel_ads = (new AdAccount($add_account_id))->createAd($fields,  $params)->exportAllData();
+		
+	return $travel_ads;	
+
+}
+
+function fb_readpreview_ad($app_id, $app_secret,$access_token,$userid, $add_account_id,$id, $product_item_id) {
+	$api = Api::init($app_id, $app_secret ,$access_token);
+	$api->setLogger(new CurlLogger());
+	$fields=array();
+	$params = array(
+		'ad_format' => 'DESKTOP_FEED_STANDARD',
+		'product_item_ids' => array($product_item_id),
+	);
+
+	$preview_ad = (new AdAccount($add_account_id))->getPreviews($fields,  $params)->exportAllData();
+		
+	return $preview_ad;	
+}
+
+// Leads https://developers.facebook.com/docs/marketing-api/dynamic-ads-for-leadgen
+
+function fb_crearleads($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata, $adset_id){
+	
+	$campaign = fb_creacampana($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata);
+
+	$creative = fb_creacreative($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata);
+
+	$ad = fb_createad($app_id, $app_secret,$access_token,$userid, $add_account_id,$rowdata, $adset_id);
+}
+
+function fb_readleads($app_id, $app_secret,$access_token,$userid, $add_account_id,$id) {
+	$api = Api::init($app_id, $app_secret ,$access_token);
+	$api->setLogger(new CurlLogger());
+	$fields=array(
+		'field_data',
+  		'retailer_item_id',
+	);
+	$params = array();
+
+	$preview_ad = (new Ad($id))->getLeads($fields,  $params)->exportAllData();
+		
+	return $preview_ad;	
+}
+
+// https://developers.facebook.com/docs/graph-api/photo-uploads
+
+// https://developers.facebook.com/docs/graph-api/reference/v4.0/targeting
