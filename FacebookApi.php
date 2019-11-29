@@ -306,6 +306,11 @@ function fb_crearadspixels($app_id, $app_secret,$access_token,$userid, $add_acco
 
 function fb_readadspixels($app_id, $app_secret,$access_token,$userid, $add_account_id,$pixel_id) {
 
+	$fb = new Facebook([
+		'app_id' => $app_id,
+		'app_secret' => $app_secret,
+	  ]);
+
 	/* make the API call */
 	try {
 		// Returns a `Facebook\FacebookResponse` object
@@ -357,6 +362,10 @@ https://developers.facebook.com/docs/graph-api/reference/user/posts/
 */
 function fb_readpost($app_id, $app_secret,$access_token,$userid, $add_account_id,$user_id) {
 
+	$fb = new Facebook([
+		'app_id' => $app_id,
+		'app_secret' => $app_secret,
+	  ]);
 	/* make the API call */
 	try {
 		// Returns a `Facebook\FacebookResponse` object
@@ -380,6 +389,11 @@ function fb_readpost($app_id, $app_secret,$access_token,$userid, $add_account_id
 //https://developers.facebook.com/docs/graph-api/reference/rtb-dynamic-post/#parameters
 
 function fb_readrtb_dynamic_post($app_id, $app_secret,$access_token,$userid, $add_account_id,$rtb_dynamic_post_id) {
+
+	$fb = new Facebook([
+		'app_id' => $app_id,
+		'app_secret' => $app_secret,
+	  ]);
 
 	/* make the API call */
 	try {
@@ -441,6 +455,10 @@ function fb_crearproduct_catalog($app_id, $app_secret,$access_token,$userid, $ad
 
 function fb_readproduct_catalog($app_id, $app_secret,$access_token,$userid, $add_account_id,$rtb_dynamic_post_id, $product_catalog_id) {
 
+	$fb = new Facebook([
+		'app_id' => $app_id,
+		'app_secret' => $app_secret,
+	  ]);
 	/* make the API call */
 	try {
 		// Returns a `Facebook\FacebookResponse` object
